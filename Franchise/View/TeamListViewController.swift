@@ -100,6 +100,7 @@ final class TeamListContentViewController: UIViewController {
     private func setUpSearchBar() {
         searchController.searchResultsUpdater = self
         searchController.dimsBackgroundDuringPresentation = false
+        searchController.hidesNavigationBarDuringPresentation = false
         definesPresentationContext = true
         tableView.tableHeaderView = searchController.searchBar
     }
