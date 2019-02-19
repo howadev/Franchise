@@ -30,17 +30,8 @@ final class LeagueListViewController: ContentViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setUpSearchBar()
         setUpBindings()
         viewModel.viewDidLoad()
-    }
-    
-    private func setUpSearchBar() {
-        let searchController = UISearchController(searchResultsController: nil)
-        searchController.searchResultsUpdater = self
-        searchController.dimsBackgroundDuringPresentation = false
-        navigationItem.searchController = searchController
-        definesPresentationContext = true
     }
     
     private func setUpBindings() {
@@ -65,16 +56,12 @@ final class LeagueListViewController: ContentViewController {
     }
 }
 
-extension LeagueListViewController: UISearchResultsUpdating {
-    func updateSearchResults(for searchController: UISearchController) {
-        viewModel.filterLeague.apply(searchController.searchBar.text).start()
-    }
-}
-
 final class LeagueListContentViewController: UIViewController {
     private let onceLoaded: LeagueListViewModel.OnceLoaded
     
     private let tableView = UITableView()
+    
+    private let searchController = UISearchController(searchResultsController: nil)
     
     init(onceLoaded: LeagueListViewModel.OnceLoaded) {
         self.onceLoaded = onceLoaded
@@ -88,6 +75,7 @@ final class LeagueListContentViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setUpTableView()
+        setUpSearchBar()
         setUpBindings()
     }
     
@@ -102,6 +90,13 @@ final class LeagueListContentViewController: UIViewController {
         }
     }
     
+    private func setUpSearchBar() {
+        searchController.searchResultsUpdater = self
+        searchController.dimsBackgroundDuringPresentation = false
+        definesPresentationContext = true
+        tableView.tableHeaderView = searchController.searchBar
+    }
+    
     private func setUpBindings() {
         onceLoaded.leagues.producer
             .take(duringLifetimeOf: self)
@@ -110,6 +105,12 @@ final class LeagueListContentViewController: UIViewController {
             .startWithValues { [weak self] _ in
                 self?.tableView.reloadData()
             }
+    }
+}
+
+extension LeagueListContentViewController: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+//        viewModel.filterLeague.apply(searchController.searchBar.text).start()
     }
 }
 

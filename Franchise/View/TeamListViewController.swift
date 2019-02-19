@@ -28,7 +28,6 @@ final class TeamListViewController: ContentViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setUpNavigationBar()
-        setUpSearchBar()
         setUpBindings()
         viewModel.viewDidLoad()
     }
@@ -36,14 +35,6 @@ final class TeamListViewController: ContentViewController {
     private func setUpNavigationBar() {
         navigationItem.leftBarButtonItem = splitViewController?.displayModeButtonItem
         navigationItem.leftItemsSupplementBackButton = true
-    }
-    
-    private func setUpSearchBar() {
-        let searchController = UISearchController(searchResultsController: nil)
-        searchController.searchResultsUpdater = self
-        searchController.dimsBackgroundDuringPresentation = false
-        navigationItem.searchController = searchController
-        definesPresentationContext = true
     }
     
     private func setUpBindings() {
@@ -68,12 +59,6 @@ final class TeamListViewController: ContentViewController {
     }
 }
 
-extension TeamListViewController: UISearchResultsUpdating {
-    func updateSearchResults(for searchController: UISearchController) {
-        viewModel.filterTeam.apply(searchController.searchBar.text).start()
-    }
-}
-
 final class TeamListContentViewController: UIViewController {
     private enum Constants {
         static let cellHeight: CGFloat = 100
@@ -82,6 +67,8 @@ final class TeamListContentViewController: UIViewController {
     private let onceLoaded: TeamListViewModel.OnceLoaded
     
     private let tableView = UITableView()
+    
+    private let searchController = UISearchController(searchResultsController: nil)
     
     init(onceLoaded: TeamListViewModel.OnceLoaded) {
         self.onceLoaded = onceLoaded
@@ -95,6 +82,7 @@ final class TeamListContentViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setUpTableView()
+        setUpSearchBar()
         setUpBindings()
     }
     
@@ -109,6 +97,13 @@ final class TeamListContentViewController: UIViewController {
         }
     }
     
+    private func setUpSearchBar() {
+        searchController.searchResultsUpdater = self
+        searchController.dimsBackgroundDuringPresentation = false
+        definesPresentationContext = true
+        tableView.tableHeaderView = searchController.searchBar
+    }
+    
     private func setUpBindings() {
         onceLoaded.teams.producer
             .take(duringLifetimeOf: self)
@@ -117,6 +112,12 @@ final class TeamListContentViewController: UIViewController {
             .startWithValues { [weak self] _ in
                 self?.tableView.reloadData()
             }
+    }
+}
+
+extension TeamListContentViewController: UISearchResultsUpdating {
+    func updateSearchResults(for searchController: UISearchController) {
+//        viewModel.filterTeam.apply(searchController.searchBar.text).start()
     }
 }
 
