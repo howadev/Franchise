@@ -117,7 +117,7 @@ final class TeamListContentViewController: UIViewController {
 
 extension TeamListContentViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-//        viewModel.filterTeam.apply(searchController.searchBar.text).start()
+        onceLoaded.filterTeam.apply(searchController.searchBar.text).start()
     }
 }
 

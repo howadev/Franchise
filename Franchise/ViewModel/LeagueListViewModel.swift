@@ -23,8 +23,6 @@ final class LeagueListViewModel {
     
     let reload: Action<(), (), NoError>
     
-    let filterLeague: Action<String?, String, NoError>
-    
     private let contentSource: ContentSource<Loaded<OnceLoaded>>
     
     init(provider: LeagueListViewModelProviderProtocol) {
@@ -34,18 +32,8 @@ final class LeagueListViewModel {
             .skipRepeats()
             .valuesAsProperty()
         
-        filterLeague = Action { SignalProducer(value: $0 ?? "") }
-        let filterLeagueValues = filterLeague.values
-            .throttle(Constants.throttleInterval, on: QueueScheduler.main)
-        let filter = Property(initial: "", then: filterLeagueValues).producer
-            .promoteError(APIError.self)
-            .skipRepeats()
-            .valuesAsProperty()
-        
-        let source = fetchLeagues.combineLatest(with: filter)
-            .map { OnceLoaded(provider: provider,
-                              leagues: $0,
-                              filter: $1) }
+        let source = fetchLeagues
+            .map { OnceLoaded(provider: provider, leagues: $0) }
             .toLoaded(UserError.init)
         
         contentSource = ContentSource(source: source)
@@ -65,9 +53,17 @@ extension LeagueListViewModel {
         
         let selectLeague: Action<League, TeamListViewModel, NoError>
         
+        let filterLeague: Action<String?, String, NoError>
+        
         init(provider: LeagueListViewModelProviderProtocol,
-             leagues: Property<[League]>,
-             filter: Property<String>) {
+             leagues: Property<[League]>) {
+            
+            self.filterLeague = Action { SignalProducer(value: $0 ?? "") }
+            let filterLeagueValues = filterLeague.values
+                .throttle(Constants.throttleInterval, on: QueueScheduler.main)
+            let filter = Property(initial: "", then: filterLeagueValues)
+                .skipRepeats()
+            
             self.leagues = leagues.combineLatest(with: filter)
                 .map { leagues, filter in
                     let sortedLeagues = leagues.sorted { $0.fullName < $1.fullName }

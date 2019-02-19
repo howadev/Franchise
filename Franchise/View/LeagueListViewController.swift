@@ -110,7 +110,7 @@ final class LeagueListContentViewController: UIViewController {
 
 extension LeagueListContentViewController: UISearchResultsUpdating {
     func updateSearchResults(for searchController: UISearchController) {
-//        viewModel.filterLeague.apply(searchController.searchBar.text).start()
+        onceLoaded.filterLeague.apply(searchController.searchBar.text).start()
     }
 }
 

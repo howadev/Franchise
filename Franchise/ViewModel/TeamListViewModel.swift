@@ -23,8 +23,6 @@ final class TeamListViewModel {
     
     let reload: Action<(), (), NoError>
     
-    let filterTeam: Action<String?, String, NoError>
-    
     private let contentSource: ContentSource<Loaded<OnceLoaded>>
     
     init(provider: TeamListViewModelProviderProtocol,
@@ -35,15 +33,7 @@ final class TeamListViewModel {
             .skipRepeats()
             .valuesAsProperty()
         
-        filterTeam = Action { SignalProducer(value: $0 ?? "") }
-        let filterTeamValues = filterTeam.values
-            .throttle(Constants.throttleInterval, on: QueueScheduler.main)
-        let filter = Property(initial: "", then: filterTeamValues).producer
-            .promoteError(APIError.self)
-            .skipRepeats()
-            .valuesAsProperty()
-        
-        let source = fetchTeams.combineLatest(with: filter)
+        let source = fetchTeams
             .map(OnceLoaded.init)
             .toLoaded(UserError.init)
         
@@ -62,7 +52,15 @@ extension TeamListViewModel {
     final class OnceLoaded {
         let teams: Property<[Team]>
         
-        init(teams: Property<[Team]>, filter: Property<String>) {
+        let filterTeam: Action<String?, String, NoError>
+        
+        init(teams: Property<[Team]>) {
+            self.filterTeam = Action { SignalProducer(value: $0 ?? "") }
+            let filterTeamValues = filterTeam.values
+                .throttle(Constants.throttleInterval, on: QueueScheduler.main)
+            let filter = Property(initial: "", then: filterTeamValues)
+                .skipRepeats()
+            
             self.teams = teams.combineLatest(with: filter)
                 .map { teams, filter in
                     if filter.isEmpty {
