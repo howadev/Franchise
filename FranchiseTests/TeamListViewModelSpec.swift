@@ -62,24 +62,6 @@ internal final class TeamListViewModelSpec: QuickSpec {
                 it("should have correct `title`") {
                     expect(mainVM.title) == Template.league1.fullName
                 }
-                
-                it("should have functional `filterTeam`") {
-                    var values = [String]()
-                    mainVM.filterTeam.values
-                        .observeValues { value in
-                            values.append(value)
-                    }
-                    
-                    expect(values.isEmpty) == true
-                    
-                    mainVM.filterTeam.apply(nil).start()
-                    expect(values.count) == 1
-                    expect(values.last) == ""
-                    
-                    mainVM.filterTeam.apply("basket").start()
-                    expect(values.count) == 2
-                    expect(values.last) == "basket"
-                }
             }
             
             context("OnceLoaded") {
@@ -94,6 +76,29 @@ internal final class TeamListViewModelSpec: QuickSpec {
                     expect(onceLoaded.teams).to(satisfy { $0 == [Template.team1] })
                 }
                 
+                it("should have functional `filterTeam`") {
+                    mockProvider.mockFetchTeams.input.send(value: [Template.team1, Template.team2])
+                    expect(mainVM.loaded).to(satisfy { $0.isDone })
+                    
+                    guard let onceLoaded = mainVM.loaded.value.value else { return fail() }
+                    
+                    var values = [String]()
+                    onceLoaded.filterTeam.values
+                        .observeValues { value in
+                            values.append(value)
+                        }
+                    
+                    expect(values.isEmpty) == true
+                    
+                    onceLoaded.filterTeam.apply(nil).start()
+                    expect(values.count) == 1
+                    expect(values.last) == ""
+                    
+                    onceLoaded.filterTeam.apply("basket").start()
+                    expect(values.count) == 2
+                    expect(values.last) == "basket"
+                }
+                
                 it("should filter `teams` by their `fullName`, `name`, or `location`") {
                     mockProvider.mockFetchTeams.input.send(value: [Template.team1, Template.team2, Template.team3, Template.team4])
                     expect(mainVM.loaded).to(satisfy { $0.isDone })
@@ -101,19 +106,19 @@ internal final class TeamListViewModelSpec: QuickSpec {
                     guard let onceLoaded = mainVM.loaded.value.value else { return fail() }
                     expect(onceLoaded.teams).to(satisfy { $0 == [Template.team1, Template.team2, Template.team3, Template.team4] })
                     
-                    mainVM.filterTeam.apply("name").start()
+                    onceLoaded.filterTeam.apply("name").start()
                     expect(onceLoaded.teams).toEventually(satisfy { $0 == [Template.team1, Template.team2] })
                     
-                    mainVM.filterTeam.apply("full").start()
+                    onceLoaded.filterTeam.apply("full").start()
                     expect(onceLoaded.teams).toEventually(satisfy { $0 == [Template.team1, Template.team3] })
                     
-                    mainVM.filterTeam.apply("location").start()
+                    onceLoaded.filterTeam.apply("location").start()
                     expect(onceLoaded.teams).toEventually(satisfy { $0 == [Template.team1, Template.team4] })
                     
-                    mainVM.filterTeam.apply("team").start()
+                    onceLoaded.filterTeam.apply("team").start()
                     expect(onceLoaded.teams).toEventually(satisfy { $0 == [Template.team1, Template.team2, Template.team3, Template.team4] })
                     
-                    mainVM.filterTeam.apply(nil).start()
+                    onceLoaded.filterTeam.apply(nil).start()
                     expect(onceLoaded.teams).toEventually(satisfy { $0 == [Template.team1, Template.team2, Template.team3, Template.team4] })
                 }
             }

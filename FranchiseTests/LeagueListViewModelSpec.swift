@@ -61,24 +61,6 @@ internal final class LeagueListViewModelSpec: QuickSpec {
                 it("should have correct `title`") {
                     expect(mainVM.title) == "Leagues"
                 }
-                
-                it("should have functional `filterLeague`") {
-                    var values = [String]()
-                    mainVM.filterLeague.values
-                        .observeValues { value in
-                            values.append(value)
-                    }
-                    
-                    expect(values.isEmpty) == true
-                    
-                    mainVM.filterLeague.apply(nil).start()
-                    expect(values.count) == 1
-                    expect(values.last) == ""
-                    
-                    mainVM.filterLeague.apply("basket").start()
-                    expect(values.count) == 2
-                    expect(values.last) == "basket"
-                }
             }
             
             context("OnceLoaded") {
@@ -91,6 +73,29 @@ internal final class LeagueListViewModelSpec: QuickSpec {
                     
                     mockProvider.mockFetchLeagues.input.send(value: [Template.league1])
                     expect(onceLoaded.leagues).to(satisfy { $0 == [Template.league1] })
+                }
+                
+                it("should have functional `filterLeague`") {
+                    mockProvider.mockFetchLeagues.input.send(value: [Template.league1, Template.league2])
+                    expect(mainVM.loaded).to(satisfy { $0.isDone })
+                    
+                    guard let onceLoaded = mainVM.loaded.value.value else { return fail() }
+                    
+                    var values = [String]()
+                    onceLoaded.filterLeague.values
+                        .observeValues { value in
+                            values.append(value)
+                        }
+                    
+                    expect(values.isEmpty) == true
+                    
+                    onceLoaded.filterLeague.apply(nil).start()
+                    expect(values.count) == 1
+                    expect(values.last) == ""
+                    
+                    onceLoaded.filterLeague.apply("basket").start()
+                    expect(values.count) == 2
+                    expect(values.last) == "basket"
                 }
                 
                 it("should sort `leagues` by their `fullName`") {
@@ -113,13 +118,13 @@ internal final class LeagueListViewModelSpec: QuickSpec {
                     guard let onceLoaded = mainVM.loaded.value.value else { return fail() }
                     expect(onceLoaded.leagues).to(satisfy { $0 == [Template.league2, Template.league3, Template.league1] })
                     
-                    mainVM.filterLeague.apply("league").start()
+                    onceLoaded.filterLeague.apply("league").start()
                     expect(onceLoaded.leagues).toEventually(satisfy { $0 == [Template.league3, Template.league1] })
                     
-                    mainVM.filterLeague.apply("3").start()
+                    onceLoaded.filterLeague.apply("3").start()
                     expect(onceLoaded.leagues).toEventually(satisfy { $0 == [Template.league2, Template.league3] })
                     
-                    mainVM.filterLeague.apply(nil).start()
+                    onceLoaded.filterLeague.apply(nil).start()
                     expect(onceLoaded.leagues).toEventually(satisfy { $0 == [Template.league2, Template.league3, Template.league1] })
                 }
 
