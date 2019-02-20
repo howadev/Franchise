@@ -13,8 +13,8 @@ import ReactiveCocoa
 import Result
 
 final class LeagueListViewController: ContentViewController {
-    var selectLeague: Signal<TeamListViewModel, NoError> {
-        return viewModel.loaded.signal
+    var selectLeague: SignalProducer<TeamListViewModel, NoError> {
+        return viewModel.loaded.producer
             // Ignore not-done values to extract `TeamListViewModel`
             .flatMap(.latest) { loaded -> Signal<TeamListViewModel, NoError> in
                 switch loaded {

@@ -36,7 +36,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             .take(duringLifetimeOf: self)
             .observe(on: UIScheduler())
             .map(TeamListViewController.init)
-            .observeValues { vc in
+            .startWithValues { vc in
                 let nav = UINavigationController(rootViewController: vc)
                 rootViewController.showDetailViewController(nav, sender: nil)
             }
